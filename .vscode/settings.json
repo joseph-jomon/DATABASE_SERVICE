@@ -1,3 +1,20 @@
 {
-    "DockerRun.DisableDockerrc": true
+    "DockerRun.DisableDockerrc": true,
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.linting.pylintArgs": [
+        "--disable=C0111", // Example to disable missing docstring warnings
+        "--max-line-length=88"
+    ],
+    "files.exclude": {
+        "node_modules": true,
+        "**/*.js": { "when": "$(basename).ts" }
+    },
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000
 }
+
+

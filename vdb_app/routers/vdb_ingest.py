@@ -1,5 +1,6 @@
 # vdb_app/routers/vdb_ingest.py
 
+from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from services.vdb_es_client import (
@@ -22,8 +23,8 @@ class VDBDocument(BaseModel):
 async def ingest_document(
     index_name: str,
     doc: VDBDocument,
-    index_manager: VDBIndexManager = Depends(get_vdb_index_manager),
-    doc_manager: VDBDocumentManager = Depends(lambda: get_vdb_document_manager(index=index_name))
+    index_manager: Annotated[VDBIndexManager, Depends(get_vdb_index_manager)],
+    doc_manager: Annotated[VDBDocumentManager, Depends(get_vdb_document_manager)]
 ):
     try:
         # Ensure the index exists with the correct mappings
@@ -53,7 +54,7 @@ async def ingest_document(
         if not response.get('acknowledged'):
             raise HTTPException(status_code=500, detail="Failed to create index")
 
-        response = doc_manager.insert_document(doc.dict(), doc_id=doc.id)
+        response = doc_manager.insert_document(doc.model_dump(), doc_id=doc.id)
         index_manager.refresh_index(index=index_name)
         return {"status": "success", "response": response}
     except Exception as e:
@@ -63,7 +64,7 @@ async def ingest_document(
 async def search(
     index_name: str,
     query_vector: list[float],
-    doc_manager: VDBDocumentManager = Depends(lambda: get_vdb_document_manager(index=index_name))
+    doc_manager: Annotated[VDBDocumentManager, Depends(get_vdb_document_manager)]
 ):
     query = {
         "knn": {
