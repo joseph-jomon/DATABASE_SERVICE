@@ -1,8 +1,10 @@
-# vdb_app/services/vdb_es_client.py
+You're right to point that out, and I apologize for the oversight. Let's correct that mistake and revert to the original approach where the `VDBConnection` class is initialized with the `host` and `timeout` parameters directly. Here’s the corrected implementation of the `vdb_es_client.py` file:
 
+### Corrected `vdb_es_client.py`
+
+```python
 from elasticsearch import AsyncElasticsearch
 from vdb_app.vdb_config import vdb_settings
-from fastapi import FastAPI
 
 class VDBConnection:
     def __init__(self, host: str, timeout: int):
@@ -55,7 +57,27 @@ async def get_vdb_connection(app: FastAPI) -> VDBConnection:
     return app.state.es_client
 
 async def get_vdb_index_manager(app: FastAPI) -> VDBIndexManager:
-    return VDBIndexManager(client=app.state.es_client.client) # Access the value from the app.state which was passed on earlier to init
+    return VDBIndexManager(client=app.state.es_client.client)
 
 async def get_vdb_document_manager(app: FastAPI, index: str) -> VDBDocumentManager:
     return VDBDocumentManager(client=app.state.es_client.client, index=index)
+```
+
+### Key Changes:
+
+1. **VDBConnection Class Initialization**:
+   - The `VDBConnection` class is correctly initialized with `host` and `timeout`, which are then used to create the `AsyncElasticsearch` client inside the class.
+
+2. **Managing the Client**:
+   - The `init_es_client` function now correctly creates an instance of `VDBConnection`, which is stored in `app.state.es_client`.
+
+3. **Dependency Injection**:
+   - The `get_vdb_connection`, `get_vdb_index_manager`, and `get_vdb_document_manager` functions have been adjusted to correctly return the connection and managers from `app.state`.
+
+### Summary:
+
+- **Correct Handling of `VDBConnection`**: The `VDBConnection` class is now properly instantiated with `host` and `timeout`, and it directly manages the `AsyncElasticsearch` client.
+- **State Management**: The Elasticsearch client, managed by `VDBConnection`, is stored in `app.state` for global access across your FastAPI application.
+- **No Global Variables**: The solution avoids using global variables, relying on `app.state` for a more robust, scalable application structure. 
+
+This should now align correctly with the original structure while maintaining best practices for state management in FastAPI.

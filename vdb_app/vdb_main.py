@@ -9,12 +9,12 @@ from services.vdb_es_client import init_es_client, close_es_client
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initialize the Elasticsearch client, initializing database connection
-    init_es_client()
+    await init_es_client(app)
 
     yield  # The application runs here
 
     # Cleanup the Elasticsearch client
-    close_es_client()
+    await close_es_client(app)
 
 app = FastAPI(lifespan=lifespan)
 

@@ -2,6 +2,7 @@
 
 from elasticsearch import AsyncElasticsearch
 from vdb_app.vdb_config import vdb_settings
+from fastapi import FastAPI
 
 class VDBConnection:
     def __init__(self, host: str, timeout: int):
@@ -35,25 +36,26 @@ class VDBDocumentManager:
     async def search_documents(self, query: dict):
         return await self.client.search(index=self.index, body=query)
 
-# Elasticsearch client instance
-es_client = None
-
-async def init_es_client():
-    global es_client
+# Initialize the Elasticsearch client and store it in FastAPI's app.state
+async def init_es_client(app: FastAPI):
     es_client = VDBConnection(
         host=vdb_settings.ELASTICSEARCH_HOST,
         timeout=vdb_settings.TIMEOUT
     )
+    app.state.es_client = es_client
 
-async def get_vdb_connection():
-    return es_client
-
-async def get_vdb_index_manager():
-    return VDBIndexManager(client=es_client.client)
-
-async def get_vdb_document_manager(index: str):
-    return VDBDocumentManager(client=es_client.client, index=index)
-
-async def close_es_client():
+# Cleanup the Elasticsearch client when the app is shutting down
+async def close_es_client(app: FastAPI):
+    es_client = app.state.es_client
     if es_client:
         await es_client.client.close()
+
+# Dependency injection functions
+async def get_vdb_connection(app: FastAPI) -> VDBConnection:
+    return app.state.es_client
+
+async def get_vdb_index_manager(app: FastAPI) -> VDBIndexManager:
+    return VDBIndexManager(client=app.state.es_client.client)
+
+async def get_vdb_document_manager(app: FastAPI, index: str) -> VDBDocumentManager:
+    return VDBDocumentManager(client=app.state.es_client.client, index=index)
