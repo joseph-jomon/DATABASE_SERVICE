@@ -1,8 +1,8 @@
 # vdb_app/services/vdb_es_client.py
 
 from elasticsearch import AsyncElasticsearch
-from vdb_app.vdb_config import vdb_settings
-from fastapi import FastAPI
+from vdb_config import vdb_settings
+from fastapi import FastAPI, Request
 
 class VDBConnection:
     def __init__(self, host: str, timeout: int):
@@ -51,11 +51,12 @@ async def close_es_client(app: FastAPI):
         await es_client.client.close()
 
 # Dependency injection functions
-async def get_vdb_connection(app: FastAPI) -> VDBConnection:
-    return app.state.es_client
+async def get_vdb_connection(request: Request) -> VDBConnection:
+    return request.app.state.es_client
 
-async def get_vdb_index_manager(app: FastAPI) -> VDBIndexManager:
-    return VDBIndexManager(client=app.state.es_client.client) # Access the value from the app.state which was passed on earlier to init
+async def get_vdb_index_manager(request: Request) -> VDBIndexManager:
+    return VDBIndexManager(client=request.app.state.es_client.client) # Access the value from the app.state which was passed on earlier to init
 
-async def get_vdb_document_manager(app: FastAPI, index: str) -> VDBDocumentManager:
-    return VDBDocumentManager(client=app.state.es_client.client, index=index)
+
+async def get_vdb_document_manager(request: Request, index: str) -> VDBDocumentManager:
+    return VDBDocumentManager(client=request.app.state.es_client.client, index=index)
