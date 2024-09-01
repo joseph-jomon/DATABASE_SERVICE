@@ -16,14 +16,14 @@ elasticsearch_service/
 │
 ├── app/
 │   ├── __init__.py
-│   ├── main.py
-│   ├── models.py
+│   ├── vdb_main.py
+│   ├── vdb_config.py
 │   ├── routers/
 │   │   ├── __init__.py
-│   │   ├── ingest.py
+│   │   ├── vdb_ingest.py
 │   └── services/
 │       ├── __init__.py
-│       ├── elasticsearch_client.py
+│       ├── vdb_es_client.py
 │
 ├── tests/
 │   ├── __init__.py

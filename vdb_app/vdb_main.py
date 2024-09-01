@@ -2,49 +2,21 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.routing import APIRouter
-from fastapi_lifespan import Lifespan
-from vdb_app.routers import vdb_ingest
-from vdb_app.services.vdb_es_client import get_vdb_index_manager, VDBIndexManager
-from vdb_app.vdb_config import vdb_settings
+from contextlib import asynccontextmanager
+from routers import vdb_ingest
+from services.vdb_es_client import init_es_client, close_es_client
 
-mappings = {
-    "properties": {
-        "Image": {"type": "text", "analyzer": "german"},
-        "Combined_Text": {"type": "text", "analyzer": "german"},
-        "Immobilie": {"type": "text", "analyzer": "german"},
-        "Headline": {"type": "text", "analyzer": "german"},
-        "Lage": {"type": "text", "analyzer": "german"},
-        "id": {"type": "text"},
-        "EMBEDDINGS_TEXT": {
-            "type": "dense_vector",
-            "dims": 512,
-            "index": True,
-            "similarity": "cosine"
-        },
-        "EMBEDDINGS_IMAGE": {
-            "type": "dense_vector",
-            "dims": 512,
-            "index": True,
-            "similarity": "cosine"
-        }
-    }
-}
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize the Elasticsearch client
+    init_es_client()
 
-def app_lifespan(app: FastAPI):
-    @Lifespan
-    async def lifespan():
-        # Perform startup tasks for default index if required
-        index_manager: VDBIndexManager = get_vdb_index_manager()
-        response = index_manager.create_index(index=vdb_settings.ELASTICSEARCH_INDEX, mappings=mappings)
-        if not response.get('acknowledged'):
-            raise RuntimeError("Failed to create default index")
-        
-        yield
-        # Perform any shutdown tasks if necessary
-    return lifespan
+    yield  # The application runs here
 
-app = FastAPI(lifespan=app_lifespan)
+    # Cleanup the Elasticsearch client
+    close_es_client()
+
+app = FastAPI(lifespan=lifespan)
 
 # Add CORS middleware if needed
 origins = [

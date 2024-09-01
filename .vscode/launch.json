@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        
+        {
+            "name": "Python Debugger: Remote Attach",
+            "type": "debugpy",
+            "request": "attach",
+           // "preLaunchTask": "Docker Compose Up",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}/vdb_app",
+                    "remoteRoot": "/vdb_app"
+                }
+            ],
+            "justMyCode": false,
+
+        },
+        
+    ]
+}

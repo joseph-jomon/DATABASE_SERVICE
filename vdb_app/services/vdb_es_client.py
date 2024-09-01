@@ -1,7 +1,7 @@
 # vdb_app/services/vdb_es_client.py
 
 from elasticsearch import Elasticsearch
-from vdb_app.vdb_config import vdb_settings
+from vdb_config import vdb_settings
 
 class VDBConnection:
     def __init__(self, host: str, timeout: int):
@@ -15,9 +15,10 @@ class VDBIndexManager:
         self.client = client
 
     def create_index(self, index: str, mappings: dict):
-        if self.client.indices.exists(index=index):
-            self.client.indices.delete(index=index)
-        return self.client.indices.create(index=index, mappings=mappings)
+        if not self.client.indices.exists(index=index):
+            return self.client.indices.create(index=index, body=mappings)
+        else:
+            return {"acknowledged": True, "index": index, "message": "Index already exists"}
 
     def refresh_index(self, index: str):
         return self.client.indices.refresh(index=index)
@@ -27,21 +28,31 @@ class VDBDocumentManager:
         self.client = client
         self.index = index
 
-    def insert_document(self, doc: dict, doc_id: int):
+    def insert_document(self, doc: dict, doc_id: str):
         return self.client.index(index=self.index, id=doc_id, document=doc)
 
     def search_documents(self, query: dict):
         return self.client.search(index=self.index, body=query)
 
-# Dependency Injection
-def get_vdb_connection():
-    return VDBConnection(
+# Elasticsearch client instance
+es_client = None
+
+def init_es_client():
+    global es_client
+    es_client = VDBConnection(
         host=vdb_settings.ELASTICSEARCH_HOST,
         timeout=vdb_settings.TIMEOUT
     )
 
-def get_vdb_index_manager(connection: VDBConnection = Depends(get_vdb_connection)):
-    return VDBIndexManager(client=connection.client)
+def get_vdb_connection():
+    return es_client
 
-def get_vdb_document_manager(index: str, connection: VDBConnection = Depends(get_vdb_connection)):
-    return VDBDocumentManager(client=connection.client, index=index)
+def get_vdb_index_manager():
+    return VDBIndexManager(client=es_client.client)
+
+def get_vdb_document_manager(index: str):
+    return VDBDocumentManager(client=es_client.client, index=index)
+
+def close_es_client():
+    if es_client:
+        es_client.client.transport.close()

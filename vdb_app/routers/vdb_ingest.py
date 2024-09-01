@@ -1,8 +1,8 @@
 # vdb_app/routers/vdb_ingest.py
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from vdb_app.services.vdb_es_client import (
+from services.vdb_es_client import (
     get_vdb_document_manager, get_vdb_index_manager, VDBIndexManager, VDBDocumentManager
 )
 
@@ -26,8 +26,30 @@ async def ingest_document(
     doc_manager: VDBDocumentManager = Depends(lambda: get_vdb_document_manager(index=index_name))
 ):
     try:
-        # Ensure the index exists
-        response = index_manager.create_index(index=index_name, mappings={})
+        # Ensure the index exists with the correct mappings
+        mappings = {
+            "properties": {
+                "Image": {"type": "text", "analyzer": "german"},
+                "Combined_Text": {"type": "text", "analyzer": "german"},
+                "Immobilie": {"type": "text", "analyzer": "german"},
+                "Headline": {"type": "text", "analyzer": "german"},
+                "Lage": {"type": "text", "analyzer": "german"},
+                "id": {"type": "keyword"},
+                "EMBEDDINGS_TEXT": {
+                    "type": "dense_vector",
+                    "dims": 512,
+                    "index": True,
+                    "similarity": "cosine"
+                },
+                "EMBEDDINGS_IMAGE": {
+                    "type": "dense_vector",
+                    "dims": 512,
+                    "index": True,
+                    "similarity": "cosine"
+                }
+            }
+        }
+        response = index_manager.create_index(index=index_name, mappings=mappings)
         if not response.get('acknowledged'):
             raise HTTPException(status_code=500, detail="Failed to create index")
 
@@ -50,7 +72,7 @@ async def search(
             "k": 10,
             "num_candidates": 100,
         },
-        "fields": ["Image"],
+        "fields": ["Image", "Combined_Text", "Immobilie", "Headline", "Lage"],
     }
 
     try:
