@@ -58,5 +58,5 @@ async def get_vdb_index_manager(request: Request) -> VDBIndexManager:
     return VDBIndexManager(client=request.app.state.es_client.client) # Access the value from the app.state which was passed on earlier to init
 
 
-async def get_vdb_document_manager(request: Request, index: str) -> VDBDocumentManager:
-    return VDBDocumentManager(client=request.app.state.es_client.client, index=index)
+async def get_vdb_document_manager(request: Request, index_name: str) -> VDBDocumentManager:
+    return VDBDocumentManager(client=request.app.state.es_client.client, index=index_name)
