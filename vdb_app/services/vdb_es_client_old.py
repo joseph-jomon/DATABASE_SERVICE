@@ -1,3 +1,5 @@
+# vdb_app/services/vdb_es_client.py
+
 from elasticsearch import AsyncElasticsearch
 from vdb_config import vdb_settings
 from fastapi import FastAPI, Request
@@ -24,15 +26,15 @@ class VDBIndexManager:
         return await self.client.indices.refresh(index=index)
 
 class VDBDocumentManager:
-    def __init__(self, client: AsyncElasticsearch, index_doc: str):
+    def __init__(self, client: AsyncElasticsearch, index: str):
         self.client = client
-        self.index_doc = index_doc
+        self.index = index
 
     async def insert_document(self, doc: dict, doc_id: str):
-        return await self.client.index(index=self.index_doc, id=doc_id, document=doc)
+        return await self.client.index(index=self.index, id=doc_id, document=doc)
 
     async def search_documents(self, query: dict):
-        return await self.client.search(index=self.index_doc, body=query)
+        return await self.client.search(index=self.index, body=query)
 
 # Initialize the Elasticsearch client and store it in FastAPI's app.state
 async def init_es_client(app: FastAPI):
@@ -53,7 +55,8 @@ async def get_vdb_connection(request: Request) -> VDBConnection:
     return request.app.state.es_client
 
 async def get_vdb_index_manager(request: Request) -> VDBIndexManager:
-    return VDBIndexManager(client=request.app.state.es_client.client)
+    return VDBIndexManager(client=request.app.state.es_client.client) # Access the value from the app.state which was passed on earlier to init
+
 
 async def get_vdb_document_manager(request: Request, index_name: str) -> VDBDocumentManager:
-    return VDBDocumentManager(client=request.app.state.es_client.client, index_doc=index_name)
+    return VDBDocumentManager(client=request.app.state.es_client.client, index=index_name)
