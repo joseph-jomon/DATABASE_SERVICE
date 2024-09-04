@@ -33,6 +33,7 @@ class VDBDocumentManager:
 
     async def search_documents(self, query: dict):
         return await self.client.search(index=self.index_doc, body=query)
+        #return await self.client.search(index=self.index_doc, body=query)
 
 # Initialize the Elasticsearch client and store it in FastAPI's app.state
 async def init_es_client(app: FastAPI):
