@@ -1,24 +1,11 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from .validation_models import  VDBDocument, VDBSearchDocument, SearchResponse
 from services.vdb_es_client import (
     get_vdb_document_manager, get_vdb_index_manager, VDBIndexManager, VDBDocumentManager
 )
 
 router = APIRouter()
-
-class VDBDocument(BaseModel):
-    Image: str
-    Combined_Text: str
-    Immobilie: str
-    Headline: str
-    Lage: str
-    id: str
-    EMBEDDINGS_TEXT: list[float]
-    EMBEDDINGS_IMAGE: list[float]
-
-class VDBSearchDocument(BaseModel):
-    search_vector: list[float]
 
 
 # Centralized index mappings configuration
@@ -68,11 +55,11 @@ async def ingest_document(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to insert document: {str(e)}")
 
-@router.post("/search/{index_name}")  # Use POST instead of GET
+@router.post("/search/{index_name}", response_model=SearchResponse)  # Use POST instead of GET
 async def search(
     query_vector: VDBSearchDocument,
     doc_manager: Annotated[VDBDocumentManager, Depends(get_vdb_document_manager)]
-):
+) -> SearchResponse:
     query = {
         "knn": {
             "field": "EMBEDDINGS_TEXT",
@@ -80,13 +67,16 @@ async def search(
             "k": 10,
             "num_candidates": 100,
         },
-        "fields": ["Image"],# , "Combined_Text", "Immobilie", "Headline", "Lage"
+       # "fields": ["Image"],# , "Combined_Text", "Immobilie", "Headline", "Lage"
     }
 
     try:
          # Execute the search query using the doc_manager
         response = await doc_manager.search_documents(query=query)
-        return {"hits": response['hits']['hits']}
+        hits_list = response['hits']['hits']
+         # Wrap the hits list in a dictionary and validate with the SearchResponse model
+        validated_response = SearchResponse(hits=hits_list)
+        return validated_response
     except Exception as e:
          # If the search fails, raise an exception with the error message
         raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
