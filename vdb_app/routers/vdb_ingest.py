@@ -1,9 +1,10 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
-from .validation_models import  VDBDocument, VDBSearchDocument, SearchResponse
+from .validation_models import  VDBDocument, VDBSearchDocument, SearchResponse, ES_Hit
 from services.vdb_es_client import (
     get_vdb_document_manager, get_vdb_index_manager, VDBIndexManager, VDBDocumentManager
 )
+from pydantic import BaseModel, ValidationError
 
 router = APIRouter()
 
@@ -35,6 +36,7 @@ def get_index_mappings() -> dict:
         }
     }
 
+
 @router.post("/ingest/{index_name}")
 async def ingest_document(
     index_name: str,
@@ -60,7 +62,7 @@ async def search(
     query_vector: VDBSearchDocument,
     doc_manager: Annotated[VDBDocumentManager, Depends(get_vdb_document_manager)]
 ) -> SearchResponse:
-    query = {
+    query   = {
         "knn": {
             "field": "EMBEDDINGS_TEXT",
             "query_vector": query_vector.search_vector,
@@ -74,8 +76,21 @@ async def search(
          # Execute the search query using the doc_manager
         response = await doc_manager.search_documents(query=query)
         hits_list = response['hits']['hits']
-         # Wrap the hits list in a dictionary and validate with the SearchResponse model
-        validated_response = SearchResponse(hits=hits_list)
+        search_response_dict = {
+            "hits": hits_list
+        }
+        # Wrap the hits list in a dictionary and validate with the SearchResponse model
+        try:
+            SearchResponse(**search_response_dict)
+        except ValidationError as exc:
+            print(repr(exc.errors()[0]['type']))
+        validated_response = SearchResponse(**search_response_dict)
+
+        #validation setp
+        try:
+            SearchResponse.model_validate(validated_response)
+        except ValidationError as exc:
+            print(repr(exc.error()[0]['type']))
         return validated_response
     except Exception as e:
          # If the search fails, raise an exception with the error message
