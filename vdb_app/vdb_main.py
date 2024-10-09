@@ -3,8 +3,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from routers import vdb_ingest
-from services.vdb_es_client import init_es_client, close_es_client
+from vdb_app.routers import vdb_ingest
+from vdb_app.services.vdb_es_client import init_es_client, close_es_client
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
