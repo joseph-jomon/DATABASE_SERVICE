@@ -1,37 +1,19 @@
+# vdb_app/routers/validation_models.py
+
 from pydantic import BaseModel
-from typing import List
+from typing import List, Dict, Any
 
-class VDBDocument(BaseModel):
-    Image: str
-    Combined_Text: str
-    Immobilie: str
-    Headline: str
-    Lage: str
-    id: str
-    EMBEDDINGS_TEXT: list[float]
-    EMBEDDINGS_IMAGE: list[float]
+class IngestDataItem(BaseModel):
+    id: str  # The unique identifier for the item
+    text_embedding: List[float]  # The vector embedding for text data
+    image_embedding: List[float]  # The vector embedding for image data
+    index_name: str  # The name of the Elasticsearch index for storage
 
-class VDBSearchDocument(BaseModel):
-    search_vector: list[float]
+class IngestDataBatch(BaseModel):
+    items: List[IngestDataItem]  # A list of items to be ingested as a batch
 
-# Define the model for the _source part of the response
-class ES_Response_Body(BaseModel):
-    Image: str
-    Combined_Text: str
-    Immobilie: str
-    Headline: str
-    Lage: str
-    id: str
-    EMBEDDINGS_TEXT: List[float]
-    EMBEDDINGS_IMAGE: List[float]
+class SearchRequest(BaseModel):
+    search_vector: List[float]  # The vector embedding for the search query
 
-# Define the model for each hit
-class Hit(BaseModel):
-    _index: str
-    _id: str
-    _score: float
-    _source: ES_Response_Body
-
-# Define the model for the complete response structure
 class SearchResponse(BaseModel):
-    hits: List[Hit]
+    hits: List[Dict[str, Any]]  # List of search hits from the Elasticsearch response
