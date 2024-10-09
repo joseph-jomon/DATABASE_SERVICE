@@ -23,7 +23,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: databaseservice_container
-    command: ["sh", "-c", "python -m debugpy --wait-for-client --listen 0.0.0.0:5678 -m uvicorn vdb_main:app --host 0.0.0.0 --port 8000 --reload"]
+    command: ["sh", "-c", "python -m debugpy --wait-for-client --listen 0.0.0.0:5678 -m uvicorn vdb_app.vdb_main:app --host 0.0.0.0 --port 8000 --reload"]
     ports:
       - 8000:8000
       - 5678:5678

@@ -7,7 +7,7 @@ FROM python:${PYTHON_VERSION}-slim as base
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 # Relative imports of python will be from here
-WORKDIR /vdb_app 
+WORKDIR /
 
 # Create a non-privileged user
 ARG UID=10001
