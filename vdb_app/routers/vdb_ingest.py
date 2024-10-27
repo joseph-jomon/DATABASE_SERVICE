@@ -12,9 +12,20 @@ router = APIRouter()
 @router.post("/ingest/")
 async def ingest_data_batch(
     batch: IngestDataBatch,
+    # Dependency injection for index and document management
     index_manager: Annotated[VDBIndexManager, Depends(get_vdb_index_manager)],
     doc_manager: Annotated[VDBDocumentManager, Depends(get_vdb_document_manager)]
 ):
+    """
+    Endpoint to ingest a batch of data items into Elasticsearch.
+    
+    Parameters:
+    - `batch`: The list of data items for ingestion, structured according to `IngestDataBatch`.
+    - `index_name`: A query parameter handled within `get_vdb_document_manager`, specifying the Elasticsearch index.
+
+    Returns:
+    - Status message indicating success or failure of the batch ingestion.
+    """
     try:
         # Group items by index_name
         index_batches = {}

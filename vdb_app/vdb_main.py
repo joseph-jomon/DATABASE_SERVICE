@@ -18,7 +18,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Database Service",
-    description="Writes the Vectors to A vector database",
+    description="Writes the Vectors to A vector database after accepting them from aggregator service",
     version="1.0.0",
     lifespan=lifespan)
 
