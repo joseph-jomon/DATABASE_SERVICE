@@ -16,7 +16,11 @@ async def lifespan(app: FastAPI):
     # Cleanup the Elasticsearch client
     await close_es_client(app)
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    title="Database Service",
+    description="Writes the Vectors to A vector database",
+    version="1.0.0",
+    lifespan=lifespan)
 
 # Add CORS middleware if needed
 origins = [
