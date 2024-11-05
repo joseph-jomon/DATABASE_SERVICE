@@ -77,7 +77,7 @@ async def ingest_data_batch(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to ingest batch: {str(e)}")
 
-@router.post("/search/{index_name}", response_model=SearchResponse)
+@router.post("/search_text/{index_name}", response_model=SearchResponse)
 async def search(
     index_name: str,
     search_request: SearchRequest,
@@ -87,6 +87,37 @@ async def search(
     query = {
         "knn": {
             "field": "text_embedding",
+            "query_vector": search_request.search_vector,
+            "k": 10,
+            "num_candidates": 100,
+        },
+        "_source": ["id", "text_embedding", "image_embedding"],
+    }
+
+    try:
+        # Execute the search query using the doc_manager
+        response = await doc_manager.search_documents(query=query)
+        hits_list = response['hits']['hits']
+        search_response_dict = {
+            "hits": hits_list
+        }
+        # Validate the search response
+        validated_response = SearchResponse(**search_response_dict)
+        return validated_response
+    except Exception as e:
+        # If the search fails, raise an exception with the error message
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+
+@router.post("/search_image/{index_name}", response_model=SearchResponse)
+async def search(
+    index_name: str,
+    search_request: SearchRequest,
+    doc_manager: Annotated[VDBDocumentManager, Depends(get_vdb_document_manager)]
+) -> SearchResponse:
+    # Define the k-NN search query using the search vector from the request
+    query = {
+        "knn": {
+            "field": "image_embedding",
             "query_vector": search_request.search_vector,
             "k": 10,
             "num_candidates": 100,
