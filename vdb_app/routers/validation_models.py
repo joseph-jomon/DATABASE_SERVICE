@@ -17,3 +17,12 @@ class SearchRequest(BaseModel):
 
 class SearchResponse(BaseModel):
     hits: List[Dict[str, Any]]  # List of search hits from the Elasticsearch response
+#------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------
+class VectorDataItem(BaseModel):
+    id: str
+    company_name: str
+    image_embedding: List[float]  # Adjust dimensions if required
+
+class VectorDataBatch(BaseModel):
+    items: List[VectorDataItem]
