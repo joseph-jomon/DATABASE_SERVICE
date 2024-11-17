@@ -23,6 +23,7 @@ class VectorDataItem(BaseModel):
     id: str
     company_name: str
     image_embedding: List[float]  # Adjust dimensions if required
+    tracking_path: str # Added the new field
 
 class VectorDataBatch(BaseModel):
     items: List[VectorDataItem]

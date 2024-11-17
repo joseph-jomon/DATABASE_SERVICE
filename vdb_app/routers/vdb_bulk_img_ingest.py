@@ -39,6 +39,7 @@ async def ingest_vector_batch(
                 },
                 "id": {"type": "keyword"},
                 "company_name": {"type": "keyword"},
+                "tracking_path": {"type": "keyword"} # Add tracking_path to the mapping
             }
         }
 
@@ -52,7 +53,11 @@ async def ingest_vector_batch(
 
         # Perform bulk insertion asynchronously
         actions = [
-            {"_index": index_name, "_id": item.id, "_source": item.dict(exclude={"index_name"})}
+            {
+                "_index": index_name, 
+                "_id": f"{item.tracking_path}", 
+                "_source": item.dict(exclude={"index_name"})
+            }
             for item in batch.items
         ]
         response = await doc_manager.bulk_insert(actions)
