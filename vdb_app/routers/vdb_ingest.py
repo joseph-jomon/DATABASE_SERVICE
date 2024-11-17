@@ -122,7 +122,7 @@ async def search(
             "k": 10,
             "num_candidates": 100,
         },
-        "_source": ["id", "text_embedding", "image_embedding"],
+        "_source": ["id", "image_embedding"],
     }
 
     try:
