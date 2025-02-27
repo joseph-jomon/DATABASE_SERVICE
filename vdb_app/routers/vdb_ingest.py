@@ -2,22 +2,84 @@
 
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List, Annotated
-from vdb_app.routers.validation_models import IngestDataBatch, SearchRequest, SearchResponse
+from vdb_app.routers.validation_models import IngestDataBatchImage,IngestDataBatchText, SearchRequest, SearchResponse
 from vdb_app.services.vdb_es_client import (
     get_vdb_document_manager, get_vdb_index_manager, VDBIndexManager, VDBDocumentManager
 )
 
 router = APIRouter()
 
-@router.post("/ingest/")
+@router.post("/ingest_image/")
 async def ingest_data_batch(
-    batch: IngestDataBatch,
+    batch: IngestDataBatchImage,
     # Dependency injection for index and document management
     index_manager: Annotated[VDBIndexManager, Depends(get_vdb_index_manager)],
     doc_manager: Annotated[VDBDocumentManager, Depends(get_vdb_document_manager)]
 ):
     """
-    Endpoint to ingest a batch of data items into Elasticsearch.
+    Endpoint to ingest a batch of image data items into Elasticsearch.
+    
+    Parameters:
+    - `batch`: The list of data items for ingestion, structured according to `IngestDataBatchImage`.
+    - `index_name`: A query parameter handled within `get_vdb_document_manager`, specifying the Elasticsearch index.
+
+    Returns:
+    - Status message indicating success or failure of the batch ingestion.
+    """
+    try:
+        # Group items by index_name
+        index_batches = {}
+        for item in batch.items:
+            if item.index_name not in index_batches:
+                index_batches[item.index_name] = []
+            index_batches[item.index_name].append(item)
+
+        # Process each index separately
+        for index_name, items in index_batches.items():
+            # Define the index mappings
+            mappings = {
+                "properties": {
+                    "image_embedding": {
+                        "type": "dense_vector",
+                        "dims": len(items[0].image_embedding),
+                        "index": True,
+                        "similarity": "cosine"
+                    },
+                    "id": {"type": "keyword"}
+                }
+            }
+
+            # Check if the index already exists
+            index_exists = await index_manager.client.indices.exists(index=index_name)
+            if not index_exists:
+                # Create the index with the specified mappings
+                response = await index_manager.create_index(index=index_name, mappings=mappings)
+                if not response.get('acknowledged'):
+                    raise HTTPException(status_code=500, detail=f"Failed to create or update index: {index_name}")
+
+            # Perform bulk insertion asynchronously
+            actions = [
+                {"_index": index_name, "_id": item.id, "_source": item.dict(exclude={"index_name"})}
+                for item in items
+            ]
+            response = await doc_manager.bulk_insert(actions)
+
+            # Refresh the index to make recent changes searchable
+            await index_manager.refresh_index(index=index_name)
+
+        return {"status": "success", "message": f"{len(batch.items)} items ingested successfully."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to ingest batch: {str(e)}")
+
+@router.post("/ingest_text/")
+async def ingest_data_batch(
+    batch: IngestDataBatchText,
+    # Dependency injection for index and document management
+    index_manager: Annotated[VDBIndexManager, Depends(get_vdb_index_manager)],
+    doc_manager: Annotated[VDBDocumentManager, Depends(get_vdb_document_manager)]
+):
+    """
+    Endpoint to ingest a batch of Text data items into Elasticsearch.
     
     Parameters:
     - `batch`: The list of data items for ingestion, structured according to `IngestDataBatch`.
@@ -42,12 +104,6 @@ async def ingest_data_batch(
                     "text_embedding": {
                         "type": "dense_vector",
                         "dims": len(items[0].text_embedding),
-                        "index": True,
-                        "similarity": "cosine"
-                    },
-                    "image_embedding": {
-                        "type": "dense_vector",
-                        "dims": len(items[0].image_embedding),
                         "index": True,
                         "similarity": "cosine"
                     },

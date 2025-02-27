@@ -10,7 +10,7 @@ from vdb_app.services.vdb_es_client import (
 # Create a separate router for vector ingestion
 vector_router = APIRouter()
 
-@vector_router.post("/ingest_img_bulk/")
+@vector_router.post("/ingest_text_bulk/")
 async def ingest_vector_batch(
     batch: VectorDataBatch,
    # index_name: str,  # Specify the index name in the request
@@ -28,11 +28,10 @@ async def ingest_vector_batch(
     - Status message indicating success or failure of the batch ingestion.
     """
     try:
-
         # Define mappings for the new index with dense vector fields
         vector_mappings = {
             "properties": {
-                "image_embedding": {
+                "text_embedding": {
                     "type": "dense_vector",
                     "dims": len(batch.items[0].image_embedding),  # Assuming each item has a 'image_embedding' field
                     "index": True,
@@ -43,7 +42,6 @@ async def ingest_vector_batch(
                 "tracking_path": {"type": "keyword"} # Add tracking_path to the mapping
             }
         }
-        index_name = doc_manager.index_doc
 
         # Check if the index already exists
         index_exists = await index_manager.client.indices.exists(index=index_name)
