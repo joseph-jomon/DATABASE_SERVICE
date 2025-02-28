@@ -42,6 +42,7 @@ async def ingest_vector_batch(
                 "tracking_path": {"type": "keyword"} # Add tracking_path to the mapping
             }
         }
+        index_name = doc_manager.index_doc
 
         # Check if the index already exists
         index_exists = await index_manager.client.indices.exists(index=index_name)
