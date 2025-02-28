@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from vdb_app.routers import vdb_ingest, vdb_bulk_img_ingest, vdb_bulk_text_ingest
+from vdb_app.routers import vdb_ingest, vdb_bulk_img_ingest, vdb_bulk_text_ingest,combined_search
 from vdb_app.services.vdb_es_client import init_es_client, close_es_client
 
 @asynccontextmanager
@@ -38,7 +38,7 @@ app.add_middleware(
 app.include_router(vdb_ingest.router)
 app.include_router(vdb_bulk_img_ingest.vector_router)
 app.include_router(vdb_bulk_text_ingest.vector_router_text)
-
+app.include_router(combined_search.combi_search_router)
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
