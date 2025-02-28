@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List, Annotated
-from vdb_app.routers.validation_models import VectorDataBatch  # Import the new vector model
+from vdb_app.routers.validation_models import IngestDataBatchText  # Import the new vector model
 from vdb_app.services.vdb_es_client import (
     get_vdb_document_manager, get_vdb_index_manager, VDBIndexManager, VDBDocumentManager
 )
@@ -12,7 +12,7 @@ vector_router = APIRouter()
 
 @vector_router.post("/ingest_text_bulk/")
 async def ingest_vector_batch(
-    batch: VectorDataBatch,
+    batch: IngestDataBatchText,
    # index_name: str,  # Specify the index name in the request
     index_manager: Annotated[VDBIndexManager, Depends(get_vdb_index_manager)],
     doc_manager: Annotated[VDBDocumentManager, Depends(get_vdb_document_manager)]
@@ -33,13 +33,12 @@ async def ingest_vector_batch(
             "properties": {
                 "text_embedding": {
                     "type": "dense_vector",
-                    "dims": len(batch.items[0].image_embedding),  # Assuming each item has a 'image_embedding' field
+                    "dims": len(batch.items[0].text_embedding),  # Assuming each item has a 'image_embedding' field
                     "index": True,
                     "similarity": "cosine"
                 },
                 "id": {"type": "keyword"},
                 "company_name": {"type": "keyword"},
-                "tracking_path": {"type": "keyword"} # Add tracking_path to the mapping
             }
         }
         index_name = doc_manager.index_doc

@@ -35,7 +35,6 @@ async def ingest_vector_batch(
                 "image_embedding": {
                     "type": "dense_vector",
                     "dims": len(batch.items[0].image_embedding),  # Assuming each item has a 'image_embedding' field
-                    "index": True,
                     "similarity": "cosine"
                 },
                 "id": {"type": "keyword"},

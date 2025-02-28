@@ -11,7 +11,7 @@ class IngestDataItemImage(BaseModel):
 class IngestDataItemText(BaseModel):
     id: str  # The unique identifier for the item
     text_embedding: List[float]  # The vector embedding for text data
-    index_name: str  # The name of the Elasticsearch index for storage
+    company_name: str  # The name of the Elasticsearch index for storage
 
 class IngestDataBatchImage(BaseModel):
     items: List[IngestDataItemImage]  # A list of items to be ingested as a batch
