@@ -8,9 +8,9 @@ from vdb_app.services.vdb_es_client import (
 )
 
 # Create a separate router for vector ingestion
-vector_router = APIRouter()
+vector_router_text = APIRouter()
 
-@vector_router.post("/ingest_text_bulk/")
+@vector_router_text.post("/ingest_text_bulk/")
 async def ingest_vector_batch(
     batch: IngestDataBatchText,
    # index_name: str,  # Specify the index name in the request
@@ -55,7 +55,7 @@ async def ingest_vector_batch(
         actions = [
             {
                 "_index": index_name, 
-                "_id": f"{item.tracking_path}", 
+                "_id": f"{item.id}", 
                 "_source": item.dict(exclude={"index_name"})
             }
             for item in batch.items
