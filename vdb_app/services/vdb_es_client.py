@@ -48,6 +48,50 @@ class VDBDocumentManager:
         # Asynchronously search the index based on the provided query
         return await self.client.search(index=self.index_doc, body=query)
 
+class VDBSearchManager:
+    def __init__(self, client: AsyncElasticsearch, text_index_name: str, image_index_name: str):
+        self.client = client
+        self.text_index_name = text_index_name
+        self.image_index_name = image_index_name
+    
+    async def combined_search(self, search_vector: list) -> dict:
+        # Define the k-NN search queries for both text and image embeddings
+        text_query = {
+            "knn": {
+                "field": "text_embedding",
+                "query_vector": search_vector,
+                "k": 10,
+                "num_candidates": 100,
+            },
+            "_source": ["id", "text_embedding"],
+        }
+
+        image_query = {
+            "knn": {
+                "field": "image_embedding",
+                "query_vector": search_vector,
+                "k": 10,
+                "num_candidates": 100,
+            },
+            "_source": ["id", "image_embedding"],
+        }
+
+        # Execute the search queries using the doc_manager
+        text_response = await self.client.search(index=self.text_index_name, body=text_query)
+        image_response = await self.client.search(index=self.image_index_name, body=image_query)
+
+        # Combine the hits from both responses
+        combined_hits = text_response['hits']['hits'] + image_response['hits']['hits']
+
+        # Sort the combined hits based on the similarity score
+        sorted_hits = sorted(combined_hits, key=lambda x: x['_score'], reverse=True)
+
+        # Create the search response
+        search_response = {
+            "hits": sorted_hits
+        }
+        return search_response
+
 # Initialize the Elasticsearch client and store it in FastAPI's app.state
 async def init_es_client(app: FastAPI):
     # Create an instance of VDBConnection
@@ -76,3 +120,7 @@ async def get_vdb_index_manager(request: Request) -> VDBIndexManager:
 async def get_vdb_document_manager(request: Request, index_name: str) -> VDBDocumentManager:
     # Create an instance of VDBDocumentManager for the specified index
     return VDBDocumentManager(client=request.app.state.es_client.client, index_doc=index_name)
+
+async def get_vdb_search_manager(request: Request, text_index_name: str, image_index_name: str) -> VDBSearchManager:
+    # Create an instance of VDBSearchManager for the specified text and image indices
+    return VDBSearchManager(client=request.app.state.es_client.client, text_index_name=text_index_name, image_index_name=image_index_name)
