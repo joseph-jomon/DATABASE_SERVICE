@@ -61,7 +61,7 @@ class VDBSearchManager:
                 "field": "text_embedding",
                 "query_vector": search_vector,
                 "k": 10,
-                "num_candidates": 100,
+                "num_candidates": 20,
             },
             "_source": ["id", "text_embedding"],
         }
@@ -71,7 +71,7 @@ class VDBSearchManager:
                 "field": "image_embedding",
                 "query_vector": search_vector,
                 "k": 10,
-                "num_candidates": 100,
+                "num_candidates": 10,
             },
             "_source": ["id", "image_embedding"],
         }
