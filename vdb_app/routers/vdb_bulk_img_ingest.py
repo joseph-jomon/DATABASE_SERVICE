@@ -13,7 +13,6 @@ vector_router = APIRouter()
 @vector_router.post("/ingest_img_bulk/")
 async def ingest_vector_batch(
     batch: VectorDataBatch,
-   # index_name: str,  # Specify the index name in the request
     index_manager: Annotated[VDBIndexManager, Depends(get_vdb_index_manager)],
     doc_manager: Annotated[VDBDocumentManager, Depends(get_vdb_document_manager)]
 ):
