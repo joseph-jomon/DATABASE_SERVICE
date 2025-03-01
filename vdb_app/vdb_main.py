@@ -1,44 +1,79 @@
 # vdb_app/vdb_main.py
 
+
 from fastapi import FastAPI
+
 from fastapi.middleware.cors import CORSMiddleware
+
 from contextlib import asynccontextmanager
-from vdb_app.routers import vdb_ingest, vdb_bulk_img_ingest, vdb_bulk_text_ingest,combined_search
+
+from vdb_app.routers import vdb_ingest, vdb_bulk_img_ingest, vdb_bulk_text_ingest, combined_search
 from vdb_app.services.vdb_es_client import init_es_client, close_es_client
 
+
 @asynccontextmanager
+
 async def lifespan(app: FastAPI):
+
     # Initialize the Elasticsearch client, initializing database connection
+
     await init_es_client(app)
+
 
     yield  # The application runs here
 
+
     # Cleanup the Elasticsearch client
+
     await close_es_client(app)
 
+
 app = FastAPI(
+
     title="Database Service",
+
     description="Writes the Vectors to A vector database after accepting them from aggregator service",
+
     version="1.0.0",
+
     lifespan=lifespan)
 
+
 # Add CORS middleware if needed
+
 origins = [
+
     "http://localhost",
+
     "http://localhost:8000",
+
 ]
+
 app.add_middleware(
+
     CORSMiddleware,
+
     allow_origins=origins,
+
     allow_credentials=True,
+
     allow_methods=["*"],
+
     allow_headers=["*"],
+
 )
 
+
 app.include_router(vdb_ingest.router)
+
 app.include_router(vdb_bulk_img_ingest.vector_router)
+
 app.include_router(vdb_bulk_text_ingest.vector_router_text)
+
 app.include_router(combined_search.combi_search_router)
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
