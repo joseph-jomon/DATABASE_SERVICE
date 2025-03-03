@@ -26,12 +26,14 @@ services:
       - xpack.security.http.ssl.enabled=true
       - xpack.security.http.ssl.keystore.path=/usr/share/elasticsearch/config/certs/elastic-certificates.p12
       - xpack.security.http.ssl.truststore.path=/usr/share/elasticsearch/config/certs/elastic-certificates.p12
-      - ELASTIC_PASSWORD=your_secure_password
+      - ELASTIC_PASSWORD_FILE=/run/secrets/elastic_password
       - http.cors.enabled=true
       - http.cors.allow-origin="*"
     volumes:
       - es_data:/usr/share/elasticsearch/data
       - ./letsencrypt:/usr/share/elasticsearch/config/certs
+    secrets:
+      - elastic_password
     networks:
       - vdb_network
 
@@ -62,3 +64,7 @@ volumes:
 networks:
   vdb_network:
     driver: bridge
+
+secrets:
+  elastic_password:
+    external: true
