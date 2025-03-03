@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   proxy:
     image: traefik:v3.1
@@ -32,23 +34,22 @@ services:
       - es_data:/usr/share/elasticsearch/data
       - ./letsencrypt:/usr/share/elasticsearch/config/certs
       - ./entrypoint.sh:/entrypoint.sh
-    entrypoint: [ "/entrypoint.sh" ]
+    entrypoint: ["/entrypoint.sh"]
     secrets:
       - elastic_password
     networks:
       - vdb_network
 
   databaseservice:
-    image: databaseservice:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: databaseservice_container
     environment:
       - ELASTICSEARCH_HOST=https://elasticsearch:9200
       - TIMEOUT=30
-    labels:
-      - "traefik.http.routers.databaseservice.entryPoints=web-secure"
-      - "traefik.http.routers.databaseservice.rule=Host(`vdb.kundalin.com`)"
-      - "traefik.http.routers.databaseservice.tls=true"
-      - "traefik.http.routers.databaseservice.tls.certresolver=myresolver"
-      - "traefik.http.services.databaseservice.loadbalancer.server.port=8000"
+    ports:
+      - "8000:8000"
     depends_on:
       - elasticsearch
     networks:
