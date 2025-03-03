@@ -41,9 +41,7 @@ services:
       - vdb_network
 
   databaseservice:
-    build:
-      context: .
-      dockerfile: ./Dockerfile
+    image: databaseservice:latest
     container_name: databaseservice_container
     environment:
       - ELASTICSEARCH_HOST=https://elasticsearch:9200
