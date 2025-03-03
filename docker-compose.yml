@@ -63,7 +63,8 @@ volumes:
 
 networks:
   vdb_network:
-    driver: bridge
+
+    driver: overlay
 
 secrets:
   elastic_password:
