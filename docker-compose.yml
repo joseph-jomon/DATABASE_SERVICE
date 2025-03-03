@@ -19,7 +19,6 @@ services:
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
-    container_name: elasticsearch
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=true
@@ -32,17 +31,15 @@ services:
     volumes:
       - es_data:/usr/share/elasticsearch/data
       - ./letsencrypt:/usr/share/elasticsearch/config/certs
+      - ./entrypoint.sh:/entrypoint.sh
+    entrypoint: [ "/entrypoint.sh" ]
     secrets:
       - elastic_password
     networks:
       - vdb_network
 
   databaseservice:
-    image: databaseservice
-    build:
-      context: .
-      dockerfile: ./Dockerfile
-    container_name: databaseservice_container
+    image: databaseservice:latest
     environment:
       - ELASTICSEARCH_HOST=https://elasticsearch:9200
       - TIMEOUT=30
@@ -63,7 +60,6 @@ volumes:
 
 networks:
   vdb_network:
-
     driver: overlay
 
 secrets:
