@@ -1,18 +1,37 @@
-
 services:
+  proxy:
+    image: traefik:v3.1
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entryPoints.web.address=:80"
+      - "--entryPoints.web-secure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.email=josephjomon401@gmail.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
-      - xpack.security.enabled=false  # Disable security for simplicity in this setup
-      - network.host=0.0.0.0
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.keystore.path=/usr/share/elasticsearch/config/certs/elastic-certificates.p12
+      - xpack.security.http.ssl.truststore.path=/usr/share/elasticsearch/config/certs/elastic-certificates.p12
+      - ELASTIC_PASSWORD=your_secure_password
       - http.cors.enabled=true
       - http.cors.allow-origin="*"
-    ports:
-      - "9200:9200"
     volumes:
       - es_data:/usr/share/elasticsearch/data
+      - ./letsencrypt:/usr/share/elasticsearch/config/certs
     networks:
       - vdb_network
 
@@ -23,10 +42,14 @@ services:
       dockerfile: ./Dockerfile
     container_name: databaseservice_container
     environment:
-      - ELASTICSEARCH_HOST=http://elasticsearch:9200
-      - TIMEOUT=30  # Adjust based on your needs
-    ports:
-      - "80:8000"
+      - ELASTICSEARCH_HOST=https://elasticsearch:9200
+      - TIMEOUT=30
+    labels:
+      - "traefik.http.routers.databaseservice.entryPoints=web-secure"
+      - "traefik.http.routers.databaseservice.rule=Host(`vdb.kundalin.com`)"
+      - "traefik.http.routers.databaseservice.tls=true"
+      - "traefik.http.routers.databaseservice.tls.certresolver=myresolver"
+      - "traefik.http.services.databaseservice.loadbalancer.server.port=8000"
     depends_on:
       - elasticsearch
     networks:
