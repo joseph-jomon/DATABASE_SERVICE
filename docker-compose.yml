@@ -36,7 +36,7 @@ services:
       - ./letsencrypt:/usr/share/elasticsearch/config/certs
 
   databaseservice:
-    image: josephf50/es_vdb_secure:latest
+    image: josephf50/es_vdb_secure
     container_name: databaseservice_container
     environment:
       - ELASTICSEARCH_HOST=https://elasticsearch:9200
