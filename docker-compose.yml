@@ -25,8 +25,8 @@ services:
       - discovery.type=single-node
       - xpack.security.enabled=true
       - xpack.security.http.ssl.enabled=true
-      - xpack.security.http.ssl.keystore.path=/usr/share/elasticsearch/config/certs/elastic-certificates.p12
-      - xpack.security.http.ssl.truststore.path=/usr/share/elasticsearch/config/certs/elastic-certificates.p12
+      - xpack.security.http.ssl.keystore.path=/usr/share/elasticsearch/config/certs/fullchain.pem
+      - xpack.security.http.ssl.truststore.path=/usr/share/elasticsearch/config/certs/privkey.pem
       - ELASTIC_USERNAME=elastic
       - ELASTIC_PASSWORD=elapas
       - http.cors.enabled=true
@@ -45,9 +45,18 @@ services:
       - TIMEOUT=30
     ports:
       - "8000:8000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.databaseservice.entrypoints=web-secure"
+      - "traefik.http.routers.databaseservice.rule=Host(`vdb.kundalin.com`)"
+      - "traefik.http.routers.databaseservice.tls=true"
+      - "traefik.http.routers.databaseservice.tls.certresolver=myresolver"
+      - "traefik.http.services.databaseservice.loadbalancer.server.port=8000"
     depends_on:
       - elasticsearch
+      
 
 volumes:
   es_data:
     driver: local
+
