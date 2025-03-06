@@ -27,40 +27,27 @@ services:
       - xpack.security.http.ssl.enabled=true
       - xpack.security.http.ssl.keystore.path=/usr/share/elasticsearch/config/certs/elastic-certificates.p12
       - xpack.security.http.ssl.truststore.path=/usr/share/elasticsearch/config/certs/elastic-certificates.p12
-      - ELASTIC_PASSWORD_FILE=/run/secrets/elastic_password
+      - ELASTIC_USERNAME=elastic
+      - ELASTIC_PASSWORD=elapas
       - http.cors.enabled=true
       - http.cors.allow-origin="*"
     volumes:
       - es_data:/usr/share/elasticsearch/data
       - ./letsencrypt:/usr/share/elasticsearch/config/certs
-      - ./entrypoint.sh:/entrypoint.sh
-    entrypoint: ["/entrypoint.sh"]
-    secrets:
-      - elastic_password
-    networks:
-      - vdb_network
 
   databaseservice:
-    image: databaseservice:latest
+    image: josephf50/es_vdb_secure:latest
     container_name: databaseservice_container
     environment:
       - ELASTICSEARCH_HOST=https://elasticsearch:9200
+      - ELASTIC_USERNAME=elastic
+      - ELASTIC_PASSWORD=elapas
       - TIMEOUT=30
     ports:
       - "8000:8000"
     depends_on:
       - elasticsearch
-    networks:
-      - vdb_network
 
 volumes:
   es_data:
     driver: local
-
-networks:
-  vdb_network:
-    driver: overlay
-
-secrets:
-  elastic_password:
-    external: true
