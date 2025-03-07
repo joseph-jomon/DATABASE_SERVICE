@@ -25,18 +25,18 @@ services:
       - discovery.type=single-node
       - xpack.security.enabled=true
       - xpack.security.http.ssl.enabled=true
-      - xpack.security.http.ssl.keystore.path=/usr/share/elasticsearch/config/certs/keystore.p12
-      - xpack.security.http.ssl.keystore.password=dbpass
+      - xpack.security.http.ssl.keystore.path=/usr/share/elasticsearch/config/certs/elasticsearch.p12
+      - xpack.security.http.ssl.keystore.password=passphrase
       - xpack.security.http.ssl.truststore.path=/usr/share/elasticsearch/config/certs/truststore.p12
-      - xpack.security.http.ssl.truststore.password=dbpass
+      - xpack.security.http.ssl.truststore.password=passphrase
       - ELASTIC_USERNAME=elastic
       - ELASTIC_PASSWORD=elapas
       - http.cors.enabled=true
       - http.cors.allow-origin="*"
     volumes:
       - es_data:/usr/share/elasticsearch/data
-      - ./letsencrypt:/usr/share/elasticsearch/config/certs:ro
-      - ./letsencrypt/keystore.p12:/usr/share/elasticsearch/config/certs/keystore.p12:ro
+      - ./elasticssl:/usr/share/elasticsearch/config/certs:ro
+      - ./elasticssl/elasticsearch.p12:/usr/share/elasticsearch/config/certs/elasticsearch.p12:ro
 
   databaseservice:
     image: josephf50/es_vdb_secure
@@ -45,6 +45,7 @@ services:
       - ELASTICSEARCH_HOST=https://elasticsearch:9200
       - ELASTIC_USERNAME=elastic
       - ELASTIC_PASSWORD=elapas
+      - ELASTICSEARCH_CERT_PATH=/usr/share/databaseservice/certs/elasticsearch.crt
       - TIMEOUT=30
     ports:
       - "8000:8000"
@@ -57,8 +58,8 @@ services:
       - "traefik.http.services.databaseservice.loadbalancer.server.port=8000"
     depends_on:
       - elasticsearch
-      
+    volumes:
+      - ./elasticssl/elasticsearch.crt:/usr/share/databaseservice/certs/elasticsearch.crt:ro
 
 volumes:
   es_data:
-    driver: local
