@@ -3,10 +3,23 @@
 from elasticsearch import AsyncElasticsearch, helpers
 from vdb_app.vdb_config import vdb_settings
 from fastapi import FastAPI, Request
+import ssl
+
+# Fetch credentials and host from environment variables
+es_host = os.getenv('ELASTICSEARCH_HOST')
+es_user = os.getenv('ELASTIC_USERNAME')
+es_password = os.getenv('ELASTIC_PASSWORD')
+
+# Path to the SSL certificate
+cert_path = os.getenv('ELASTICSEARCH_CERT_PATH')
 
 class VDBConnection:
     def __init__(self, host: str, timeout: int):
-        self.client = AsyncElasticsearch(host, timeout=timeout)
+        self.client = AsyncElasticsearch(host,
+        http_auth=(es_user,es_password),
+        scheme="https",
+        ssl_context=ssl.create_default_context(cafile=cert_path),
+        timeout=timeout)
 
     async def ping(self):
         # Asynchronous ping to check if the Elasticsearch cluster is up
