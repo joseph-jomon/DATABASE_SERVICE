@@ -21,7 +21,6 @@ services:
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
-    user: "0:0"  # Running as root user in the container
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=true
