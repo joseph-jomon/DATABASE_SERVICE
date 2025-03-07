@@ -35,7 +35,8 @@ services:
       - http.cors.allow-origin="*"
     volumes:
       - es_data:/usr/share/elasticsearch/data
-      - ./letsencrypt:/usr/share/elasticsearch/config/certs
+      - ./letsencrypt:/usr/share/elasticsearch/config/certs:ro
+      - ./letsencrypt/keystore.p12:/usr/share/elasticsearch/config/certs/keystore.p12:ro
 
   databaseservice:
     image: josephf50/es_vdb_secure
