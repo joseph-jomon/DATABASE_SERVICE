@@ -21,13 +21,14 @@ services:
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    user: "0:0"  # Running as root user in the container
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=true
       - xpack.security.http.ssl.enabled=true
       - xpack.security.http.ssl.keystore.path=/usr/share/elasticsearch/config/certs/keystore.p12
       - xpack.security.http.ssl.keystore.password=dbpass
-      - xpack.security.http.ssl.truststore.path=/usr/share/elasticsearch/config/certs/keystore.p12
+      - xpack.security.http.ssl.truststore.path=/usr/share/elasticsearch/config/certs/truststore.p12
       - xpack.security.http.ssl.truststore.password=dbpass
       - ELASTIC_USERNAME=elastic
       - ELASTIC_PASSWORD=elapas
