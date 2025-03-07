@@ -4,6 +4,7 @@ from elasticsearch import AsyncElasticsearch, helpers
 from vdb_app.vdb_config import vdb_settings
 from fastapi import FastAPI, Request
 import ssl
+import os
 
 # Fetch credentials and host from environment variables
 es_host = os.getenv('ELASTICSEARCH_HOST')
