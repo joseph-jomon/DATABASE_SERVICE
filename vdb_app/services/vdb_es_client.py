@@ -17,8 +17,9 @@ cert_path = os.getenv('ELASTICSEARCH_CERT_PATH')
 class VDBConnection:
     def __init__(self, host: str, timeout: int):
         self.client = AsyncElasticsearch(
-        hosts=[{"host": host, "port": 9200, "scheme": "https"}],
-        http_auth=(es_user,es_password),
+        #hosts=[{"host": host, "port": 9200, "scheme": "http"}],
+       hosts=[{"host": host, "port": 9200, "scheme": "https"}],
+       basic_auth=(es_user,es_password),
         ssl_context=ssl.create_default_context(cafile=cert_path),
         timeout=timeout)
 
