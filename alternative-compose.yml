@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  proxy:
+    image: traefik:v3.1
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entryPoints.web.address=:80"
+      - "--entryPoints.web-secure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.email=josephjomon401@gmail.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false  # Disable security for simplicity in this setup
+      - network.host=0.0.0.0
+      - http.cors.enabled=true
+      - http.cors.allow-origin=*
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+  databaseservice:
+    image: josephf50/es_vdb_secure
+    container_name: databaseservice_container
+    environment:
+      - ELASTICSEARCH_HOST=http://elasticsearch:9200
+      - ELASTIC_USERNAME=elastic
+      - ELASTIC_PASSWORD=elapas
+      - TIMEOUT=30
+    ports:
+      - "8000:8000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.databaseservice.entrypoints=web-secure"
+      - "traefik.http.routers.databaseservice.rule=Host(`vdb.kundalin.com`)"
+      - "traefik.http.routers.databaseservice.tls=true"
+      - "traefik.http.routers.databaseservice.tls.certresolver=myresolver"
+      - "traefik.http.services.databaseservice.loadbalancer.server.port=8000"
+    depends_on:
+      - elasticsearch
+
+
+volumes:
+  es_data:
